@@ -62,16 +62,16 @@ public class UserService {
 
         user = userRepository.save(user);
 
-        // Tự động tạo Account sau khi đăng ký
+        // Tự động tạo Account
         accountService.createAccountForUser(user.getId());
 
-        // Nếu có file eKYC → upload
+        // Upload KYC (KHÔNG làm rollback nếu lỗi)
         if (request.getFrontImage() != null && !request.getFrontImage().isEmpty()) {
             try {
                 kycService.uploadKyc(user.getId(), request.getFrontImage());
             } catch (Exception e) {
                 log.error("KYC upload failed but registration continues: {}", e.getMessage());
-                // Vẫn cho đăng ký thành công, chỉ KYC thất bại
+                // Không throw exception để tránh rollback transaction
             }
         }
 

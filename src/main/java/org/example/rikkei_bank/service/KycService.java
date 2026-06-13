@@ -10,6 +10,7 @@ import org.example.rikkei_bank.entity.User;
 import org.example.rikkei_bank.repository.KycProfileRepository;
 import org.example.rikkei_bank.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,15 +34,14 @@ public class KycService {
         this.cloudinary = cloudinary;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)  // Tạo transaction riêng
     public KycProfile uploadKyc(Long userId, MultipartFile frontImage) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Nếu không có file → bỏ qua upload (không bắt buộc)
         if (frontImage == null || frontImage.isEmpty()) {
             log.warn("No image uploaded for userId: {}", userId);
-            return null; // hoặc tạo KycProfile mà không có ảnh
+            return null;
         }
 
         try {
@@ -70,8 +70,8 @@ public class KycService {
             return kyc;
 
         } catch (Exception e) {
-            log.error("❌ Cloudinary upload failed for userId {}: {}", userId, e.getMessage());
-            throw new RuntimeException("Upload ảnh eKYC thất bại: " + e.getMessage(), e);
+            log.error(" Cloudinary upload failed for userId {}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Upload eKYC thất bại: " + e.getMessage());
         }
     }
 
