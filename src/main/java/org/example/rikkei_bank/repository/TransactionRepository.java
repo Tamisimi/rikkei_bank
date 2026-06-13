@@ -1,0 +1,19 @@
+package org.example.rikkei_bank.repository;
+
+import org.example.rikkei_bank.entity.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+
+    // UC-06: Truy vấn giao dịch DEBIT hoặc CREDIT theo accountId
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.fromAccount.id = :accountId OR t.toAccount.id = :accountId " +
+            "ORDER BY t.createdAt DESC")
+    Page<Transaction> findTransactionsByAccountId(@Param("accountId") Long accountId, Pageable pageable);
+}
