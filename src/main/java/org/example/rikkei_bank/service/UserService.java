@@ -71,7 +71,34 @@ public class UserService {
         return user;
     }
 
-    // Các phương thức cũ giữ nguyên...
+    @Transactional
+    public UserResponseDto updateUser(Long id, RegisterRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setAddress(request.getAddress());
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        user = userRepository.save(user);
+
+        return userRepository.findUserResponseDtoById(id)
+                .orElseThrow(() -> new RuntimeException("Error retrieving updated user"));
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        userRepository.delete(user);
+    }
+
     public Page<UserResponseDto> getAllUsers(Pageable pageable) {
         return userRepository.findAllUserResponseDto(pageable);
     }

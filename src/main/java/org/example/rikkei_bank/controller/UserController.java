@@ -22,16 +22,15 @@ public class UserController {
         this.userService = userService;
     }
 
-    // FR-04: Đăng ký mở tài khoản + eKYC
+    // FR-04: Đăng ký (Public)
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@ModelAttribute RegisterRequest request) {
-        // Sử dụng @ModelAttribute để hỗ trợ MultipartFile
         User user = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Đăng ký tài khoản và tạo Account thành công", user));
+                .body(ApiResponse.success("Đăng ký tài khoản thành công", user));
     }
 
-    // FR-05: Quản lý người dùng
+    // FR-05: Lấy danh sách user (Phân trang) - GET
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllUsers(Pageable pageable) {
@@ -39,10 +38,30 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người dùng thành công", users));
     }
 
+    // FR-05: Lấy chi tiết user theo ID
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable Long id) {
         UserResponseDto user = userService.getUserById(id);
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người dùng thành công", user));
+    }
+
+    // FR-05: Cập nhật user (UPDATE)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
+            @PathVariable Long id,
+            @RequestBody RegisterRequest request) {   // Có thể tạo UserUpdateRequest sau
+
+        UserResponseDto updatedUser = userService.updateUser(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật người dùng thành công", updatedUser));
+    }
+
+    // FR-05: Xóa user (DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.success("Xóa người dùng thành công", null));
     }
 }
