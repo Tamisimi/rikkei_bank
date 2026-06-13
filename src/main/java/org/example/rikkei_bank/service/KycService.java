@@ -2,6 +2,7 @@ package org.example.rikkei_bank.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.example.rikkei_bank.dto.response.KycProfileResponse;
 import org.example.rikkei_bank.entity.KycProfile;
 import org.example.rikkei_bank.entity.enums.Status;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class KycService {
 
@@ -36,16 +38,18 @@ public class KycService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (frontImage.isEmpty()) {
-            throw new RuntimeException("File upload is empty");
+        // Nếu không có file → bỏ qua upload (không bắt buộc)
+        if (frontImage == null || frontImage.isEmpty()) {
+            log.warn("No image uploaded for userId: {}", userId);
+            return null; // hoặc tạo KycProfile mà không có ảnh
         }
 
         try {
-            // Upload lên Cloudinary
             Map uploadResult = cloudinary.uploader().upload(frontImage.getBytes(),
                     ObjectUtils.asMap(
                             "folder", "rikkei_bank/kyc",
-                            "public_id", "kyc_" + userId + "_" + System.currentTimeMillis()
+                            "public_id", "kyc_" + userId + "_" + System.currentTimeMillis(),
+                            "resource_type", "image"
                     ));
 
             String imageUrl = (String) uploadResult.get("secure_url");
@@ -62,10 +66,12 @@ public class KycService {
             user.setKycProfile(kyc);
             userRepository.save(user);
 
+            log.info("✅ Upload eKYC thành công cho userId: {}", userId);
             return kyc;
 
-        } catch (IOException e) {
-            throw new RuntimeException("Upload file to Cloudinary failed: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("❌ Cloudinary upload failed for userId {}: {}", userId, e.getMessage());
+            throw new RuntimeException("Upload ảnh eKYC thất bại: " + e.getMessage(), e);
         }
     }
 

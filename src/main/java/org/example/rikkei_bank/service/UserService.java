@@ -1,5 +1,6 @@
 package org.example.rikkei_bank.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.rikkei_bank.dto.request.RegisterRequest;
 import org.example.rikkei_bank.dto.response.UserResponseDto;
 import org.example.rikkei_bank.entity.Role;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -65,7 +67,12 @@ public class UserService {
 
         // Nếu có file eKYC → upload
         if (request.getFrontImage() != null && !request.getFrontImage().isEmpty()) {
-            kycService.uploadKyc(user.getId(), request.getFrontImage());
+            try {
+                kycService.uploadKyc(user.getId(), request.getFrontImage());
+            } catch (Exception e) {
+                log.error("KYC upload failed but registration continues: {}", e.getMessage());
+                // Vẫn cho đăng ký thành công, chỉ KYC thất bại
+            }
         }
 
         return user;
