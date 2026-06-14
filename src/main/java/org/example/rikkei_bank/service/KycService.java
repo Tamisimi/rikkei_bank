@@ -66,7 +66,7 @@ public class KycService {
             user.setKycProfile(kyc);
             userRepository.save(user);
 
-            log.info("✅ Upload eKYC thành công cho userId: {}", userId);
+            log.info(" Upload eKYC thành công cho userId: {}", userId);
             return kyc;
 
         } catch (Exception e) {
@@ -82,6 +82,21 @@ public class KycService {
                 .orElseThrow(() -> new RuntimeException("KYC not found"));
 
         kyc.setStatus(approved ? Status.CONFIRM : Status.REJECT);
+        if (approved) {
+            kyc.setVerifiedAt(LocalDateTime.now());
+            kyc.getUser().setIsKyc(true);
+        }
+
+        return kycProfileRepository.save(kyc);
+    }
+
+    @Transactional
+    public KycProfile approveKycByUserId(Long userId, boolean approved) {
+        KycProfile kyc = kycProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("KYC not found for userId: " + userId));
+
+        kyc.setStatus(approved ? Status.CONFIRM : Status.REJECT);
+
         if (approved) {
             kyc.setVerifiedAt(LocalDateTime.now());
             kyc.getUser().setIsKyc(true);

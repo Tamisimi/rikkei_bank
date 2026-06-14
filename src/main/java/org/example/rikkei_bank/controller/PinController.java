@@ -4,7 +4,6 @@ import org.example.rikkei_bank.dto.response.ApiResponse;
 import org.example.rikkei_bank.security.CustomUserDetails;
 import org.example.rikkei_bank.service.PinService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,10 +35,8 @@ public class PinController {
             @RequestParam String username,
             @RequestParam String newPassword) {
 
-        // TODO: Trong thực tế nên thêm OTP verification
-        // Hiện tại cho phép reset trực tiếp theo yêu cầu SRS
         pinService.forgotPasswordByUsername(username, newPassword);
 
-        return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.", null));
+        return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại với mật khẩu mới.", null));
     }
 }

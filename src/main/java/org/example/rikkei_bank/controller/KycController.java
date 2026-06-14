@@ -34,14 +34,16 @@ public class KycController {
     }
 
     // FR-09: Phê duyệt eKYC (Staff / Admin)
-    @PutMapping("/{kycId}/approve")
+    @PutMapping("/approve")
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<ApiResponse<KycProfile>> approveKyc(
-            @PathVariable Long kycId,
+            @RequestParam Long userId,
             @RequestParam boolean approved) {
 
-        KycProfile kyc = kycService.approveKyc(kycId, approved);
-        return ResponseEntity.ok(ApiResponse.success(
-                approved ? "Phê duyệt eKYC thành công" : "Từ chối eKYC", kyc));
+        // Tìm KYC theo userId thay vì kycId
+        KycProfile kyc = kycService.approveKycByUserId(userId, approved);
+
+        String message = approved ? "Phê duyệt eKYC thành công" : "Từ chối eKYC thành công";
+        return ResponseEntity.ok(ApiResponse.success(message, kyc));
     }
 }

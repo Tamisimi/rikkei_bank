@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -40,12 +41,15 @@ public class TransactionService {
         Account toAccount = accountRepository.findById(request.getTargetAccountId())
                 .orElseThrow(() -> new RuntimeException("Target account not found"));
 
-        if (fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
+        BigDecimal currentBalance = fromAccount.getBalance() != null ? fromAccount.getBalance() : BigDecimal.ZERO;
+
+        if (currentBalance.compareTo(request.getAmount()) < 0) {
             throw new InsufficientBalanceException("Số dư không đủ để thực hiện giao dịch");
         }
 
-        fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
-        toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+        fromAccount.setBalance(currentBalance.subtract(request.getAmount()));
+        toAccount.setBalance((toAccount.getBalance() != null ? toAccount.getBalance() : BigDecimal.ZERO)
+                .add(request.getAmount()));
 
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);

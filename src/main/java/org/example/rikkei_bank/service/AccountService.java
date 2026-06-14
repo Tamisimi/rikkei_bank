@@ -36,7 +36,7 @@ public class AccountService {
                 .accountNumber(accountNumber)
                 .balance(BigDecimal.ZERO)
                 .currency("VND")
-                .user(user)
+                .user(user)                    // ← Phải gán đúng user
                 .active(true)
                 .build();
 
@@ -48,12 +48,12 @@ public class AccountService {
      */
     public AccountResponse getBalance(Long accountId, Long userId) {
         Account account = accountRepository.findByIdAndUserId(accountId, userId)
-                .orElseThrow(() -> new RuntimeException("Account not found or you don't have permission"));
+                .orElseThrow(() -> new RuntimeException("Account not found or you don't have permission to view this account"));
 
         return AccountResponse.builder()
                 .id(account.getId())
                 .accountNumber(account.getAccountNumber())
-                .balance(account.getBalance())
+                .balance(account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO)
                 .currency(account.getCurrency())
                 .active(account.getActive())
                 .createdAt(account.getCreatedAt())
@@ -71,10 +71,7 @@ public class AccountService {
      * Tìm tài khoản mặc định (tài khoản đầu tiên) của user
      */
     public Account findDefaultAccount(Long userId) {
-        List<Account> accounts = getAccountsByUserId(userId);
-        if (accounts.isEmpty()) {
-            throw new RuntimeException("User has no account");
-        }
-        return accounts.get(0);
+        return accountRepository.findFirstByUserIdOrderByIdAsc(userId)
+                .orElseThrow(() -> new RuntimeException("User has no account"));
     }
 }

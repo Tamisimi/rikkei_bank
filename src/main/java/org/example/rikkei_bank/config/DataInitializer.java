@@ -26,15 +26,17 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         // Tạo Roles
-        if (roleRepository.findByName("ADMIN").isEmpty()) {
-            roleRepository.save(Role.builder().name("ADMIN").description("Quản trị viên").build());
-        }
-        if (roleRepository.findByName("STAFF").isEmpty()) {
-            roleRepository.save(Role.builder().name("STAFF").description("Nhân viên").build());
-        }
-        if (roleRepository.findByName("CUSTOMER").isEmpty()) {
-            roleRepository.save(Role.builder().name("CUSTOMER").description("Khách hàng").build());
-        }
+        Role adminRole = roleRepository.findByName("ADMIN")
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .name("ADMIN").description("Quản trị viên").build()));
+
+        Role staffRole = roleRepository.findByName("STAFF")
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .name("STAFF").description("Nhân viên").build()));
+
+        Role customerRole = roleRepository.findByName("CUSTOMER")
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .name("CUSTOMER").description("Khách hàng").build()));
 
         // Tạo Admin mặc định
         if (userRepository.findByUsername("admin").isEmpty()) {
@@ -44,9 +46,9 @@ public class DataInitializer implements CommandLineRunner {
                     .fullName("Administrator")
                     .email("admin@rikkei.bank")
                     .isActive(true)
+                    .isKyc(true)
                     .build();
 
-            Role adminRole = roleRepository.findByName("ADMIN").get();
             admin.setRoles(Set.of(adminRole));
             userRepository.save(admin);
             System.out.println("✅ Admin account created: username=admin, password=admin123");
